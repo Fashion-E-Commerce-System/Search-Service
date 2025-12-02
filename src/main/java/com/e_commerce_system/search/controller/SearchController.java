@@ -7,8 +7,8 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
-import com.e_commerce_system.search.document.Article;
-import com.e_commerce_system.search.repository.ArticleRepository;
+import com.e_commerce_system.search.document.Product;
+import com.e_commerce_system.search.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,15 +30,15 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ArticleController {
+public class SearchController {
 
-    private final ArticleRepository articleRepository;
+    private final ProductRepository productRepository;
     private final ReactiveElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
 
     @GetMapping("/{id}")
-    public Mono<Article> findById(@PathVariable String id) {
-        return articleRepository.findById(id);
+    public Mono<Product> findById(@PathVariable String id) {
+        return productRepository.findById(id);
     }
 
     @GetMapping("/search")
@@ -63,13 +63,13 @@ public class ArticleController {
                 .withSuggester(suggester)
                 .build();
 
-        return elasticsearchOperations.search(searchQuery, Article.class)
+        return elasticsearchOperations.search(searchQuery, Product.class)
                 .collectList()
                 .map(searchHits -> {
-                    List<Article> articles = searchHits.stream()
+                    List<Product> products = searchHits.stream()
                             .map(SearchHit::getContent)
                             .collect(Collectors.toList());
-                    return new SearchResultResponse(articles, List.of());
+                    return new SearchResultResponse(products, List.of());
                 });
     }
 

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductEvent {
-    private Integer id;
+    private Long id;
     private String name;
 }

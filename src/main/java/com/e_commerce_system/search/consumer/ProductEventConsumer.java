@@ -23,10 +23,30 @@ public class ProductEventConsumer {
     public void consume(String message) {
         log.info("Kafka event received: {}", message);
         try {
-            ProductEvent event = objectMapper.readValue(message, ProductEvent.class);
+            ProductEvent event;
+            try {
+                // First, try to deserialize as a full ProductEvent object
+                event = objectMapper.readValue(message, ProductEvent.class);
+            } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
+                // If it fails because it's a number, try to deserialize as Long
+                if (e.getMessage() != null && e.getMessage().contains("deserialize from Number value")) {
+                    try {
+                        Long eventId = objectMapper.readValue(message, Long.class);
+                        // Create a ProductEvent with just the ID
+                        event = new ProductEvent(eventId, null); // Assuming null name is acceptable
+                        log.warn("Received product event as a raw ID: {}. Processing with null name.", eventId);
+                    } catch (JsonProcessingException innerEx) {
+                        // If it's not even a Long, re-throw the original MismatchedInputException
+                        throw e; // Re-throw the original MismatchedInputException
+                    }
+                } else {
+                    // Re-throw other MismatchedInputExceptions
+                    throw e;
+                }
+            }
 
             Inbox inboxItem = Inbox.builder()
-                    .eventId(event.getId().toString())
+                    .eventId(event.getId().longValue())
                     .aggregateType("Product")
                     .aggregateId(event.getId().toString())
                     .eventType("ProductUpdated") // Assuming this is an update event or a generic product event
