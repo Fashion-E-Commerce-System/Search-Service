@@ -27,20 +27,20 @@ public class ProductSyncService {
         String aggregateId = inboxEvent.getAggregateId();
         JsonNode payload = objectMapper.readTree(inboxEvent.getPayload());
 
-        switch (eventType) {
+        switch (eventType.trim()) {
             case "PRODUCT_CREATED":
                 Product newProduct = new Product();
-                newProduct.setProductId(payload.get("productId").asLong());
-                newProduct.setProdName(payload.get("prodName").asText());
+                newProduct.setProductId(payload.get("id").asLong());
+                newProduct.setProdName(payload.get("name").asText());
                 productRepository.save(newProduct).block();
                 log.info("Created new product from event {}: {}", inboxEvent.getEventId(), newProduct.getProductId());
                 break;
 
             case "PRODUCT_UPDATED":
-                Long productIdToUpdate = payload.get("productId").asLong();
+                Long productIdToUpdate = payload.get("id").asLong();
                 productRepository.findByProductId(productIdToUpdate)
                         .flatMap(product -> {
-                            product.setProdName(payload.get("prodName").asText());
+                            product.setProdName(payload.get("name").asText());
                             return productRepository.save(product);
                         })
                         .doOnSuccess(product -> {
@@ -51,8 +51,8 @@ public class ProductSyncService {
                         .switchIfEmpty(Mono.defer(() -> {
                             log.warn("Product with id {} not found for update event {}. Creating it.", productIdToUpdate, inboxEvent.getEventId());
                             Product productToCreate = new Product();
-                            productToCreate.setProductId(payload.get("productId").asLong());
-                            productToCreate.setProdName(payload.get("prodName").asText());
+                            productToCreate.setProductId(payload.get("id").asLong());
+                            productToCreate.setProdName(payload.get("name").asText());
                             return productRepository.save(productToCreate)
                                     .doOnSuccess(createdProduct -> log.info("Created new product {} from a PRODUCT_UPDATED event", createdProduct.getProductId()));
                         })).block();

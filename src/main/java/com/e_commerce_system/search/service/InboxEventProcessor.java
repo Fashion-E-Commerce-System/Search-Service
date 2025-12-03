@@ -22,7 +22,7 @@ public class InboxEventProcessor {
     @Transactional
     public void processInboxEvents() {
         log.info("Checking for pending events in inbox...");
-        List<Inbox> pendingEvents = inboxRepository.findByStatusOrderByCreatedAt(Inbox.EventStatus.PENDING);
+        List<Inbox> pendingEvents = inboxRepository.findByStatusOrderByCreatedAtAsc(Inbox.EventStatus.PENDING);
 
         if (pendingEvents.isEmpty()) {
             return;

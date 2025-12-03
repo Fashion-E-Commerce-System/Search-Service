@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/articles")
+@RequestMapping("/search")
 @AllArgsConstructor
 @Getter
 @Setter
@@ -41,7 +41,7 @@ public class SearchController {
         return productRepository.findById(id);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/")
     public Mono<SearchResultResponse> search(@RequestParam String query) {
         Suggester suggester = Suggester.of(s -> s
                 .suggesters("did-you-mean", f -> f
